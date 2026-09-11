@@ -114,18 +114,8 @@ values
    'Medical emergency line to be confirmed before demo.',
    'Official source pending', 'unverified', null);
 
--- ---------- knowledge_documents (text only; embeddings added in Day 2 ingestion) ----------
-insert into knowledge_documents (title, content, source_type, source_ref, language, chunk_index, source, verification_status, last_verified)
-values
-  ('Limbe overview',
-   'Limbe is a coastal town in the South-West Region of Cameroon, at the foot of Mount Cameroon. It is known for volcanic black-sand beaches, the Limbe Wildlife Centre (a primate and wildlife sanctuary) and the historic Limbe Botanic Garden.',
-   'destination', 'limbe', 'en', 0,
-   'Public record — formal citation pending', 'verified', '2026-09-11'),
-  ('Kribi and Lobé Falls',
-   'Kribi is a seaside resort town in the South Region of Cameroon, known for white-sand beaches. Nearby, the Lobé Falls are a rare coastal waterfall where the Lobé River flows directly into the Atlantic Ocean.',
-   'destination', 'kribi', 'en', 0,
-   'Public record — formal citation pending', 'verified', '2026-09-11'),
-  ('Foumban heritage',
-   'Foumban, in the West Region, is the historic seat of the Bamoun kingdom. Its Royal Palace and museum display royal artefacts and traditional art, and the town is a well-known centre for Cameroonian arts and crafts.',
-   'destination', 'foumban', 'en', 0,
-   'Public record — formal citation pending', 'verified', '2026-09-11');
+-- ---------- knowledge_documents ----------
+-- NOTE: knowledge_documents is populated by the RAG ingestion script
+-- (python rag/ingest.py), which reads knowledge/**.md, chunks, and embeds each
+-- chunk. We intentionally do NOT insert rows here: rows without embeddings can
+-- never be retrieved by match_documents() and would be dead data.

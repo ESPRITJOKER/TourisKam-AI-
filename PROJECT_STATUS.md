@@ -1,9 +1,9 @@
 # TOURISCAM AI STATUS
 
-_Last updated: 2026-09-11 (end of Day 1)_
+_Last updated: 2026-09-11 (Day 2 — RAG scripts written)_
 
 ## Current Phase
-**Day 1 — Foundation.** Repo, structure, database schema, seed data, and docs.
+**Day 2 — RAG.** Ingestion, retrieval, and guardrailed prompt written (pending live validation once Python + Supabase creds are in place).
 
 ## Completed
 - ✅ Git repo initialized locally and connected to `ESPRITJOKER/TourisKam-AI-` (Apache LICENSE preserved).
@@ -14,19 +14,24 @@ _Last updated: 2026-09-11 (end of Day 1)_
 - ✅ `knowledge/README.md` — verification/trust policy; example doc `knowledge/destinations/limbe.md`.
 - ✅ `README.md`, `docs/architecture.md`, this tracker.
 
+## Completed (Day 2)
+- ✅ `rag/` pipeline written: `config.py`, `embed.py`, `ingest.py`, `retrieve.py`, `prompt.py`, `requirements.txt`, `README.md`.
+- ✅ Guardrailed multilingual system prompt (single source of truth; will be copied into n8n Day 3).
+- ✅ Knowledge docs for Douala, Yaoundé, Limbe, Kribi, Foumban.
+- ✅ `db/reindex.sql`; removed embedding-less `knowledge_documents` rows from seed (ingestion now owns that table).
+
 ## In Progress
-- Nothing (Day 1 wrapping up; awaiting user to run SQL in Supabase).
+- Live validation of RAG scripts — blocked on Python install + Supabase creds + Gemini key.
 
-## Blocked
-- **Gemini API key** — user to obtain from https://aistudio.google.com/app/apikey (needed Day 2).
-- **Supabase SQL execution** — user must run `db/schema.sql` + `db/seed.sql` in their Supabase project (Claude cannot access the console).
-- **n8n Cloud instance** — user to create (needed Day 3).
+## Blocked (all user actions — I can't access these consoles)
+- **Install Python 3.11+** — `winget install -e --id Python.Python.3.12` (needed for RAG + Streamlit).
+- **Gemini API key** — https://aistudio.google.com/app/apikey → put in `.env`.
+- **Supabase**: run `db/schema.sql` then `db/seed.sql`; put URL + service role key in `.env`.
+- **n8n Cloud instance** — create (needed Day 3).
 
-## Next Tasks (Day 2 — RAG)
-- Ingestion script: read `knowledge/**`, clean, chunk, embed via Gemini, upsert to `knowledge_documents`.
-- Retrieval helper using `match_documents`.
-- Guardrailed system prompt (prefer retrieved verified info; refuse to hallucinate).
-- Enable `vector` extension check + refresh ivfflat index post-ingest.
+## Next Tasks
+- Once Python is in: `python rag/ingest.py --dry-run` (validate chunking, no creds needed), then a live ingest + `retrieve.py --answer` smoke test.
+- Day 3 — WhatsApp: n8n webhook, Twilio in/out, voice pipeline (Gemini audio), copy guardrailed prompt into n8n.
 
 ## Known Bugs
 - None yet.
