@@ -1,0 +1,38 @@
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+build/
+npm-debug.log*
+
+# n8n local data
+.n8n/
+n8n-data/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs & temp
+*.log
+tmp/
+.streamlit/secrets.toml
