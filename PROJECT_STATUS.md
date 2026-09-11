@@ -1,9 +1,16 @@
 # TOURISCAM AI STATUS
 
-_Last updated: 2026-09-11 (Day 2 — RAG scripts written)_
+_Last updated: 2026-09-11 (Day 2 — RAG live & validated ✅)_
 
 ## Current Phase
-**Day 2 — RAG.** Ingestion, retrieval, and guardrailed prompt written (pending live validation once Python + Supabase creds are in place).
+**Day 2 COMPLETE — RAG working end-to-end.** 118 chunks embedded in Supabase;
+semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case).
+
+## Working models (this Gemini key)
+- Embedding: `gemini-embedding-001` (truncated to 768 dims via output_dimensionality).
+- Generation: `gemini-flash-latest` — a THINKING model, so `thinking_budget=0` is
+  set (otherwise it spends the whole token budget on hidden thoughts → empty text).
+- NOT available on this key: `gemini-2.0-flash`, `gemini-2.5-flash`, `text-embedding-004`.
 
 ## Completed
 - ✅ Git repo initialized locally and connected to `ESPRITJOKER/TourisKam-AI-` (Apache LICENSE preserved).
@@ -39,13 +46,21 @@ _Last updated: 2026-09-11 (Day 2 — RAG scripts written)_
 - Note: dataset CSVs → relational tables (hotels/guides/etc. for the specialized
   tools) is a **Day 4** task; will replace the placeholder seed rows then.
 
-## In Progress
-- Live ingest (embeddings) of dataset + destination docs — blocked ONLY on Gemini key.
+## Demo Readiness
+- **~35%.** RAG core is demo-ready (retrieval + multilingual guardrailed answers).
+  Still needed: WhatsApp round-trip (Day 3), specialized tools (Day 4), dashboard (Day 5).
 
 ## Blocked (user actions)
-- **Gemini API key** — https://aistudio.google.com/app/apikey → paste into `.env` `GEMINI_API_KEY`.
 - **n8n Cloud instance** — create (needed Day 3).
-- **Rotate Supabase DB password after competition** — it was pasted in chat.
+- **Twilio WhatsApp Sandbox** — enable (needed Day 3).
+- **SECURITY: rotate Supabase DB password AND regenerate the Gemini key after the
+  competition** — both were pasted into chat and are in the transcript.
+
+## Next Tasks (Day 3 — WhatsApp)
+- n8n Cloud webhook; Twilio inbound/outbound; port the guardrailed RAG (embed →
+  match_documents → gemini-flash-latest with thinking_budget=0) into n8n.
+- Voice-note pipeline (Gemini native audio).
+- Log to tourist_queries (hashed session) + emit query_events.
 
 ## Next Tasks
 - Once Python is in: `python rag/ingest.py --dry-run` (validate chunking, no creds needed), then a live ingest + `retrieve.py --answer` smoke test.

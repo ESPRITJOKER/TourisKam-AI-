@@ -23,9 +23,9 @@ KNOWLEDGE_DIR = ROOT / "knowledge"
 load_dotenv(ROOT / ".env")
 
 # --- Models / constants ---
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-GEMINI_EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "text-embedding-004")
-EMBEDDING_DIM = 768  # text-embedding-004 default; must match db/schema.sql vector(768)
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+GEMINI_EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-001")
+EMBEDDING_DIM = 768  # gemini-embedding-001 truncated to 768; matches vector(768)
 
 
 def _require(name: str) -> str:

@@ -66,26 +66,42 @@ def build_user_prompt(query: str, context_block: str) -> str:
     )
 
 
-def answer_query(query: str, matches: List[dict]) -> str:
-    """Generate a guardrailed answer. Falls back gracefully on any error."""
+def answer_query(query: str, matches: List[dict], *, retries: int = 3) -> str:
+    """Generate a guardrailed answer. Retries transient errors (429/500/503),
+    then falls back gracefully."""
+    import time
+
     from retrieve import format_context  # local import to avoid import cycle
 
     context_block = format_context(matches)
     user_prompt = build_user_prompt(query, context_block)
-    try:
-        from google.genai import types
 
-        resp = gemini_client().models.generate_content(
-            model=GEMINI_MODEL,
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                temperature=0.3,  # low temp: factual, less drift
-                max_output_tokens=600,
-            ),
-        )
-        text = (resp.text or "").strip()
-        return text or FALLBACK_MESSAGE
-    except Exception as e:  # noqa: BLE001
-        print(f"[prompt] generation error: {e}")
-        return FALLBACK_MESSAGE
+    for attempt in range(retries):
+        try:
+            from google.genai import types
+
+            resp = gemini_client().models.generate_content(
+                model=GEMINI_MODEL,
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    temperature=0.3,  # low temp: factual, less drift
+                    max_output_tokens=800,
+                    # gemini-flash-latest is a "thinking" model; disable thinking
+                    # so the token budget goes to the (short) visible answer, not
+                    # hidden reasoning (which otherwise hits MAX_TOKENS with no text).
+                    thinking_config=types.ThinkingConfig(thinking_budget=0),
+                ),
+            )
+            text = (resp.text or "").strip()
+            if text:
+                return text
+        except Exception as e:  # noqa: BLE001
+            msg = str(e)
+            transient = any(code in msg for code in ("429", "500", "503", "UNAVAILABLE"))
+            print(f"[prompt] generation error (attempt {attempt + 1}): {e}")
+            if transient and attempt < retries - 1:
+                time.sleep(2 * (attempt + 1))  # backoff on transient errors
+                continue
+            break
+    return FALLBACK_MESSAGE

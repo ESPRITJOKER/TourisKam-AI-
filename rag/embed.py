@@ -38,7 +38,12 @@ def embed_text(text: str, *, task_type: str = "RETRIEVAL_DOCUMENT",
             resp = client.models.embed_content(
                 model=GEMINI_EMBEDDING_MODEL,
                 contents=text,
-                config=types.EmbedContentConfig(task_type=task_type),
+                # gemini-embedding-001 defaults to 3072 dims but supports
+                # Matryoshka truncation; request 768 to match vector(768).
+                config=types.EmbedContentConfig(
+                    task_type=task_type,
+                    output_dimensionality=EMBEDDING_DIM,
+                ),
             )
             values = resp.embeddings[0].values
             if len(values) != EMBEDDING_DIM:
