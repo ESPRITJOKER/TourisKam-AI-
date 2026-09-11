@@ -1,0 +1,8 @@
+﻿id,name,region,type,summary,authority,source_id
+DST-001,Douala,Littoral,urban,Commercial capital; tourism base,MINTOUL,SRC-001
+DST-002,Yaoundé,Centre,urban,"Political capital; museums, monuments and cultural tourism base",MINTOUL,SRC-001
+DST-003,Limbe,South-West,coastal,"Beach, coastal and nature tourism base",MINTOUL/UNESCO,SRC-001
+DST-004,Kribi,South,coastal,Beach and Lobé Falls cultural/natural tourism base,MINTOUL/UNESCO,SRC-001
+DST-005,Bafut,North-West,cultural,Traditional Grassfields cultural heritage,UNESCO,SRC-007
+DST-006,Far North Cameroon,Far North,cultural/natural,"Mandara Mountains, Waza and cultural landscapes",UNESCO,SRC-003
+DST-007,Congo Basin / Lobéké area,East,nature,Sangha Trinational component in Cameroon,UNESCO,SRC-003

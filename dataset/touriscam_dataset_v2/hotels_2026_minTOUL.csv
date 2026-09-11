@@ -1,0 +1,33 @@
+﻿id,name,city,address_area,category,total_rooms,indicative_starting_tariff,notes,source_id,verification_status
+HOT-001,HOTEL HILTON,Yaoundé,Boulevard du 20 mai,5*,273,320 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-002,DJEUGA PALACE,Yaoundé,WARDA,4*,163,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-003,HOTEL LA FALAISE,Yaoundé,WARDA,4*,125,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-004,HOTEL FRANCO,Yaoundé,NLONGKAK,4*,114,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-005,BOUN'S HOTEL,Yaoundé,CENTRE COMMERCIAL,4*,23,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-006,RELAXE PALACE HOTEL,Yaoundé,MEYO à SOA,4*,64,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-007,HOTEL MERINA (Extension),Yaoundé,CENTRE COMMERCIAL – AVENUE AMADOU AHIDJO,4*,98,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-008,SUITA HOTEL,Yaoundé,BASTOS,4*,80,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-009,UNITED INTERNATIONAL HOTEL,Yaoundé,CENTRE COMMERCIAL,4*,96,150 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-010,HOTEL JOUVENCE INTERNATIONAL,Yaoundé,FOUDA,4*,55,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-011,LE LAGON CLUB & AFFAIRES,Yaoundé,BASTOS,4*,25,250 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-012,HOTEL FREESIA,Yaoundé,ESSOS,4*,33,150 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-013,ALBATROS PRIMIUM HOTEL,Yaoundé,Mvog Mbi,4*,,150 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-014,CLUB MULTI-FONCTIONNEL MUNDI,Yaoundé,NTOUN à BIKOK,3*,50,75 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-015,HOTEL DES DEPUTES,Yaoundé,QUARTIER ADMINISTRATIF,3*,148,75 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-016,AURELIA PALACE,Yaoundé,BASTOS,3*,21,75 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-017,HOTEL FELICIA,Yaoundé,CORON,3*,60,75 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-018,DAJOLL HOTEL,Mbankomo,Mbankomo,3*,42,75 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-019,SAFYAD HOTEL,Yaoundé,ODZA,3*,51,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-020,HOTEL LA COURONNE RW,Yaoundé,Bastos,3*,34,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-021,UNITED HOTEL,Mbankomo,Mbankomo,3*,87,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-022,NEW HAVEN HOTEL,Yaoundé,MELEN,3*,40,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-023,HOTEL SAS LES GRACES,Yaoundé,NFANDENA II,3*,42,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-024,RESIDENCE DE LA COURS DES NATIONS,Yaoundé,OLEMBE,3*,24,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-025,HOTEL LA ROCHELLE,Yaoundé,MIMBOMAN I,3*,54,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-026,CINCINNATI HOTEL,Nkolafamba,NKOLO à Nkolafamba,3*,30,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-027,PALACIO HOTEL,Yaoundé,BASTOS,4*,48,125 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-028,HOTEL SANTA LUCIA,Yaoundé,KONDENGUI,3*,34,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-029,HOTEL APPLE GATE,Yaoundé,OLEMBE,3*,26,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-030,COFE HOTEL,Yaoundé,OBILI,3*,38,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-031,JADE HOTEL RESORT,Yaoundé,FEBE,3*,60,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified
+HOT-032,DIAMANT HOTEL,Yaoundé,ELIG-ESSONO,3*,60,65 EUR,Indicative starting tariff published by MINTOUL for CM14 2026; verify directly before booking.,SRC-016,current-source-verified

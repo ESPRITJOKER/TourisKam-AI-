@@ -1,0 +1,18 @@
+﻿id,topic,category,value,details,source_id,verification_status
+PR-001,Taxi minimum city fare,Transport,250 XAF,MINTOUL states the minimum city taxi price is 250 FCFA; actual fare varies with distance.,SRC-006,source-published; verify locally
+PR-002,Typical individual city taxi course,Transport,"about 2,000 XAF","MINTOUL says an individual city trip is generally around 2,000 FCFA, with price to be negotiated.",SRC-006,source-published; indicative
+PR-003,Airport taxi daytime,Transport,"3,500 XAF","MINTOUL states an airport trip costs 3,500 FCFA in daytime.",SRC-006,source-published; indicative
+PR-004,Airport taxi night,Transport,"5,000 XAF","MINTOUL states an airport trip costs 5,000 FCFA at night after 18:00.",SRC-006,source-published; indicative
+PR-005,Road toll,Transport,500 XAF per vehicle per toll station,MINTOUL states a road toll of 500 FCFA per vehicle and station.,SRC-006,source-published; verify current
+PR-006,International airports,Air transport,"Yaoundé, Douala, Garoua","MINTOUL states Cameroon has three international airports: Yaoundé, Douala and Garoua.",SRC-008,source-published
+PR-007,Rail corridor,Rail transport,Douala–Yaoundé–Ngaoundéré,MINTOUL describes the Transcamerounais railway as connecting Douala to Ngaoundéré through Yaoundé.,SRC-006,source-published
+PR-008,Tourist visa validity,Entry,"30 days, non-renewable, multiple entries/exits",MINTOUL tourism page states this validity.,SRC-007,source-published; verify immigration rules
+PR-009,Tourist visa supporting document,Entry,Passport,MINTOUL lists a valid passport among required documents.,SRC-007,source-published
+PR-010,Tourist visa supporting document,Entry,Return flight ticket,MINTOUL lists a round-trip flight ticket.,SRC-007,source-published
+PR-011,Tourist visa supporting document,Entry,International vaccination certificate (yellow fever),MINTOUL lists an international vaccination certificate for yellow fever.,SRC-007,source-published
+PR-012,Tourist visa supporting document,Entry,2 passport photos,MINTOUL lists two front-facing identity photos.,SRC-007,source-published
+PR-013,Tourist visa supporting document,Entry,Accommodation certificate or hotel reservation,MINTOUL lists accommodation proof or hotel reservation.,SRC-007,source-published
+PR-014,Tourist visa amount,Entry,"50,000 XAF (according to MINTOUL page)","MINTOUL gives 50,000 FCFA according to exchange rate; treat as indicative and verify before advising users.",SRC-007,source-published; verify current
+PR-015,Official e-visa portal,Entry,evisacam.cm,MINTOUL states that Cameroon visas can now be obtained online through the official e-visa portal.,SRC-023,source-published
+PR-016,Customs temporary importation,Entry/customs,Temporary duty-free importation,MINTOUL states tourists benefit from temporary duty-free importation for certain personal items; exact conditions should be checked with customs.,SRC-023,source-published; verify current
+PR-017,Tourist guide directory,Guides,MINTOUL public directory,MINTOUL provides a public directory of registered tourism guides and allows regional filtering.,SRC-024,source-published

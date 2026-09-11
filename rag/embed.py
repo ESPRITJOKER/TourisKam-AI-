@@ -10,6 +10,14 @@ from typing import List
 from config import EMBEDDING_DIM, GEMINI_EMBEDDING_MODEL, gemini_client
 
 
+def to_pgvector(values: List[float]) -> str:
+    """Format an embedding as a pgvector text literal, e.g. '[0.1,0.2,...]'.
+
+    Bind this with an explicit `%s::vector` cast in SQL.
+    """
+    return "[" + ",".join(repr(float(v)) for v in values) + "]"
+
+
 def embed_text(text: str, *, task_type: str = "RETRIEVAL_DOCUMENT",
                retries: int = 3) -> List[float]:
     """Return a 768-d embedding for `text`.

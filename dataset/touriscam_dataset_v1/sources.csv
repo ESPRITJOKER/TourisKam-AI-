@@ -1,0 +1,11 @@
+﻿source_id,publisher,title,scope,url,authority_level,last_verified
+SRC-001,MINTOUL,Cameroun en découverte,Official tourism portal,https://mintoul.gov.cm/cameroun-en-decouverte/,primary,2026-09-11
+SRC-002,MINTOUL,Documentation,"Official tourism documents: hotel cards, regulations/forms, tourism publications, guide accreditation",https://mintoul.gov.cm/documentation/,primary,2026-09-11
+SRC-003,UNESCO,Cameroon World Heritage Convention,Inscribed and tentative heritage sites,https://whc.unesco.org/en/statesparties/cm,primary,2026-09-11
+SRC-004,UNESCO,Cameroon Tentative List,17 tentative-list properties,https://whc.unesco.org/en/tentativelists/action%3Dlisttentative%26order%3Dstates%26state%3Dcm,primary,2026-09-11
+SRC-005,UNESCO,Bimbia et ses sites associés,Detailed heritage/tentative-list description,https://whc.unesco.org/en/tentativelists/6478,primary,2026-09-11
+SRC-006,UNESCO,Parc National de Waza,Detailed tentative-list description,https://whc.unesco.org/en/tentativelists/6316/,primary,2026-09-11
+SRC-007,UNESCO,Chefferie de Bafut,Detailed tentative-list description,https://whc.unesco.org/en/tentativelists/6320,primary,2026-09-11
+SRC-008,UNESCO,Chutes de la Lobé,Detailed tentative-list description,https://whc.unesco.org/en/tentativelists/6330/,primary,2026-09-11
+SRC-009,UNESCO,Grande Case Grassfields,Detailed tentative-list description with component sites,https://whc.unesco.org/en/tentativelists/6332/,primary,2026-09-11
+SRC-010,OpenStreetMap,Tourism mapping,"Supporting geographic data: tourism features, coordinates, access, fees, opening hours where mapped",https://wiki.openstreetmap.org/wiki/Tourism,supporting,2026-09-11

@@ -1,8 +1,12 @@
 """Shared configuration for TourisCam AI RAG scripts.
 
 Loads environment from the project-root .env and exposes typed getters plus
-lazily-constructed Gemini and Supabase clients. Fails loudly with a clear
-message when a required secret is missing.
+a Gemini client and a direct PostgreSQL (Supabase) connection factory.
+
+We connect to Supabase over a direct Postgres connection (psycopg2) rather than
+the REST client: it's the right tool for server-side ingestion/queries and it
+uses the DB connection string only (no service-role key needed in scripts).
+Secrets live only in .env — never commit them.
 """
 from __future__ import annotations
 
@@ -38,15 +42,6 @@ def gemini_api_key() -> str:
     return _require("GEMINI_API_KEY")
 
 
-def supabase_url() -> str:
-    return _require("SUPABASE_URL")
-
-
-def supabase_service_key() -> str:
-    # Service role key — server/scripts only. Never ship to a frontend.
-    return _require("SUPABASE_SERVICE_ROLE_KEY")
-
-
 @lru_cache(maxsize=1)
 def gemini_client():
     from google import genai
@@ -54,8 +49,32 @@ def gemini_client():
     return genai.Client(api_key=gemini_api_key())
 
 
-@lru_cache(maxsize=1)
-def supabase_client():
-    from supabase import create_client
+def _db_kwargs() -> dict:
+    """Build psycopg2 connection kwargs.
 
-    return create_client(supabase_url(), supabase_service_key())
+    Prefer a full DSN (SUPABASE_DB_URL) if given; otherwise assemble from
+    discrete parts. Discrete parts avoid URL-encoding pitfalls when the DB
+    password contains characters like % or *.
+    """
+    dsn = os.getenv("SUPABASE_DB_URL")
+    if dsn:
+        return {"dsn": dsn}
+    return {
+        "host": _require("SUPABASE_DB_HOST"),
+        "port": os.getenv("SUPABASE_DB_PORT", "5432"),
+        "dbname": os.getenv("SUPABASE_DB_NAME", "postgres"),
+        "user": _require("SUPABASE_DB_USER"),
+        "password": _require("SUPABASE_DB_PASSWORD"),
+        "sslmode": os.getenv("SUPABASE_DB_SSLMODE", "require"),  # Supabase requires SSL
+        "connect_timeout": int(os.getenv("SUPABASE_DB_TIMEOUT", "15")),
+    }
+
+
+def pg_connect():
+    """Open a new psycopg2 connection to Supabase Postgres."""
+    import psycopg2
+
+    kw = _db_kwargs()
+    if "dsn" in kw:
+        return psycopg2.connect(kw["dsn"])
+    return psycopg2.connect(**kw)

@@ -1,0 +1,15 @@
+﻿id,name,category,city_or_area,region,description,source_id,verification_status
+ATT-001,Jardin botanique de Limbé,Nature / botanical garden,Limbe,South-West,"Created in 1892; official MINTOUL profile describes about 1,000 plant species, 500 trees and 48 hectares; includes Jungle Village and visitor trails.",SRC-013,verified
+ATT-002,Mont Cameroun,Mountain / hiking / sports tourism,Buea,South-West,"Volcanic mountain near the Atlantic coast; MINTOUL profile describes an elevation of about 4,100 m and the annual Course de l'Espoir.",SRC-014,verified
+ATT-003,Palais de Justice de Douala,Historic architecture,Douala,Littoral,"Historic building in the first arrondissement of Douala, with German and French colonial-era history and architectural interest.",SRC-015,verified
+ATT-004,Chutes de la Lobé,Waterfall / coastal tourism,Kribi,South,UNESCO Tentative List cultural landscape; MINTOUL beach-tourism page identifies the Lobé waterfall as flowing directly into the sea at Kribi.,SRC-009,verified
+ATT-005,Parc national de Korup,Ecotourism / national park,South-West,South-West,MINTOUL identifies Korup National Park as an ecotourism site with very old plant species.,SRC-010,verified
+ATT-006,Réserve du Dja,Nature / World Heritage,South / East,South / East,MINTOUL identifies the Dja Reserve as UNESCO World Heritage.,SRC-010,verified
+ATT-007,Mayo Rey fossil sites,Geology / paleontology,Mayo-Rey,North,MINTOUL identifies fossilized dinosaur footprints in the Mayo Rey area.,SRC-010,verified
+ATT-008,Mont Fébé,Mountain / urban tourism,Yaoundé,Centre,Listed by MINTOUL as a tourist site in its sports-tourism content.,SRC-011,verified
+ATT-009,Palais des Congrès de Yaoundé,Conference / business tourism,Yaoundé,Centre,MINTOUL identifies Yaoundé as a business and congress tourism destination with international-standard infrastructure including the Palais des Congrès.,SRC-012,verified
+ATT-010,Côte et plages de Kribi,Beach / coastal tourism,Kribi,South,MINTOUL identifies Kribi as one of Cameroon's coastal resort cities.,SRC-009,verified
+ATT-011,Côte et plages de Limbe,Beach / coastal tourism,Limbe,South-West,MINTOUL identifies Limbe as one of Cameroon's coastal resort cities.,SRC-009,verified
+ATT-012,Golf de Yaoundé,Sports tourism,Yaoundé,Centre,MINTOUL lists golf in Yaoundé as a tourism-related sport.,SRC-011,verified
+ATT-013,Golf de Tiko,Sports tourism,Tiko,South-West,MINTOUL lists golf in Tiko as a tourism-related sport.,SRC-011,verified
+ATT-014,Pêche au gros au large des côtes,Sports / coastal tourism,Cameroon coast,Multiple coastal regions,MINTOUL identifies deep-sea fishing as a tourism-related activity.,SRC-011,verified

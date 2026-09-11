@@ -15,14 +15,15 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 from typing import Iterable, List
 
 import frontmatter
 
-from config import KNOWLEDGE_DIR, supabase_client
-from embed import embed_text
+from config import KNOWLEDGE_DIR, pg_connect
+from embed import embed_text, to_pgvector
 
 # --- chunking parameters ---
 # Docs are short; chunk on paragraph boundaries, packing up to ~MAX_CHARS
@@ -124,54 +125,58 @@ def main() -> int:
         print(f"File not found: {single}", file=sys.stderr)
         return 1
 
-    sb = None if args.dry_run else supabase_client()
+    conn = None if args.dry_run else pg_connect()
+
+    insert_sql = (
+        "insert into knowledge_documents "
+        "(title, content, source_type, source_ref, language, chunk_index, "
+        " embedding, source, verification_status, last_verified, metadata) "
+        "values (%s,%s,%s,%s,%s,%s, %s::vector, %s,%s,%s, %s::jsonb)"
+    )
 
     total_files = 0
     total_chunks = 0
-    for path in iter_files(single):
-        rec = parse_doc(path)
-        if rec is None:
-            continue
-        total_files += 1
-        chunks = chunk(rec["body"])
-        rel = path.relative_to(KNOWLEDGE_DIR)
-        print(f"• {rel} — {len(chunks)} chunk(s) "
-              f"[{rec['verification_status']}]")
+    try:
+        for path in iter_files(single):
+            rec = parse_doc(path)
+            if rec is None:
+                continue
+            total_files += 1
+            chunks = chunk(rec["body"])
+            rel = path.relative_to(KNOWLEDGE_DIR)
+            print(f"• {rel} — {len(chunks)} chunk(s) "
+                  f"[{rec['verification_status']}]")
 
-        if args.dry_run:
+            if args.dry_run:
+                total_chunks += len(chunks)
+                continue
+
+            with conn.cursor() as cur:
+                # Idempotency: clear prior rows for this source_ref + type.
+                cur.execute(
+                    "delete from knowledge_documents "
+                    "where source_ref = %s and source_type = %s",
+                    (rec["source_ref"], rec["source_type"]),
+                )
+                for idx, ch in enumerate(chunks):
+                    try:
+                        emb = embed_text(ch, task_type="RETRIEVAL_DOCUMENT")
+                    except Exception as e:  # noqa: BLE001
+                        conn.rollback()
+                        print(f"  ! embed failed for chunk {idx} of {rel}: {e}",
+                              file=sys.stderr)
+                        return 2
+                    cur.execute(insert_sql, (
+                        rec["title"], ch, rec["source_type"], rec["source_ref"],
+                        rec["language"], idx, to_pgvector(emb), rec["source"],
+                        rec["verification_status"], rec["last_verified"],
+                        json.dumps({"path": str(rel)}),
+                    ))
+            conn.commit()
             total_chunks += len(chunks)
-            continue
-
-        # Idempotency: clear prior rows for this source_ref + type.
-        (sb.table("knowledge_documents")
-           .delete()
-           .eq("source_ref", rec["source_ref"])
-           .eq("source_type", rec["source_type"])
-           .execute())
-
-        rows = []
-        for idx, ch in enumerate(chunks):
-            try:
-                emb = embed_text(ch, task_type="RETRIEVAL_DOCUMENT")
-            except Exception as e:  # noqa: BLE001
-                print(f"  ! embed failed for chunk {idx} of {rel}: {e}",
-                      file=sys.stderr)
-                return 2
-            rows.append({
-                "title": rec["title"],
-                "content": ch,
-                "source_type": rec["source_type"],
-                "source_ref": rec["source_ref"],
-                "language": rec["language"],
-                "chunk_index": idx,
-                "embedding": emb,
-                "source": rec["source"],
-                "verification_status": rec["verification_status"],
-                "last_verified": rec["last_verified"],
-                "metadata": {"path": str(rel)},
-            })
-        sb.table("knowledge_documents").insert(rows).execute()
-        total_chunks += len(rows)
+    finally:
+        if conn is not None:
+            conn.close()
 
     print(f"\nDone: {total_files} file(s), {total_chunks} chunk(s) "
           f"{'parsed (dry-run)' if args.dry_run else 'ingested'}.")

@@ -13,8 +13,8 @@ import argparse
 import sys
 from typing import List, TypedDict
 
-from config import supabase_client
-from embed import embed_text
+from config import pg_connect
+from embed import embed_text, to_pgvector
 
 
 class Match(TypedDict):
@@ -44,15 +44,20 @@ def retrieve(query: str, *, match_count: int = 5,
         return []
 
     try:
-        resp = supabase_client().rpc(
-            "match_documents",
-            {
-                "query_embedding": emb,
-                "match_count": match_count,
-                "similarity_threshold": similarity_threshold,
-            },
-        ).execute()
-        return resp.data or []
+        conn = pg_connect()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "select id, title, content, source, source_type, "
+                    "       verification_status, similarity "
+                    "from match_documents(%s::vector, %s, %s)",
+                    (to_pgvector(emb), match_count, similarity_threshold),
+                )
+                cols = [c.name for c in cur.description]
+                rows = [dict(zip(cols, r)) for r in cur.fetchall()]
+            return rows
+        finally:
+            conn.close()
     except Exception as e:  # noqa: BLE001
         print(f"[retrieve] match_documents error: {e}", file=sys.stderr)
         return []

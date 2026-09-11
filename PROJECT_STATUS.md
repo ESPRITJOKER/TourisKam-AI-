@@ -20,14 +20,32 @@ _Last updated: 2026-09-11 (Day 2 — RAG scripts written)_
 - ✅ Knowledge docs for Douala, Yaoundé, Limbe, Kribi, Foumban.
 - ✅ `db/reindex.sql`; removed embedding-less `knowledge_documents` rows from seed (ingestion now owns that table).
 
-## In Progress
-- Live validation of RAG scripts — blocked on Python install + Supabase creds + Gemini key.
+## Completed (validation)
+- ✅ Python 3.13 installed; `rag/.venv` created; deps installed.
+- ✅ Ingestion dry-run passed (5 docs, chunking OK).
+- ✅ Reworked scripts to connect via **direct Postgres (psycopg2)** through the
+  Supabase **Session pooler** (IPv4) — direct `db.*` host is IPv6-only.
+- ✅ `db/schema.sql` + `db/seed.sql` applied to Supabase (verified: 9 tables,
+  pgvector + pgcrypto extensions, `match_documents` RPC, seed rows present).
 
-## Blocked (all user actions — I can't access these consoles)
-- **Install Python 3.11+** — `winget install -e --id Python.Python.3.12` (needed for RAG + Streamlit).
-- **Gemini API key** — https://aistudio.google.com/app/apikey → put in `.env`.
-- **Supabase**: run `db/schema.sql` then `db/seed.sql`; put URL + service role key in `.env`.
+## Dataset (user-provided, 2026-09-11)
+- `dataset/touriscam_dataset_final/` — curated MINTOUL/UNESCO/OSM-sourced package
+  with `RAG_POLICY.md` (guardrails), CSVs (attractions, hotels, guides, heritage,
+  events, practical info, sources), and consolidated RAG JSONL (113 records:
+  hotel 32, heritage 20, event 16, practical 17, attraction 14, guide 14).
+- `rag/ingest_dataset.py` merges both JSONL files + enriches with `sources.csv`
+  (URL/authority) → `knowledge_documents`. Dry-run validated (113 records, all
+  with source_url). No schema change needed.
+- Note: dataset CSVs → relational tables (hotels/guides/etc. for the specialized
+  tools) is a **Day 4** task; will replace the placeholder seed rows then.
+
+## In Progress
+- Live ingest (embeddings) of dataset + destination docs — blocked ONLY on Gemini key.
+
+## Blocked (user actions)
+- **Gemini API key** — https://aistudio.google.com/app/apikey → paste into `.env` `GEMINI_API_KEY`.
 - **n8n Cloud instance** — create (needed Day 3).
+- **Rotate Supabase DB password after competition** — it was pasted in chat.
 
 ## Next Tasks
 - Once Python is in: `python rag/ingest.py --dry-run` (validate chunking, no creds needed), then a live ingest + `retrieve.py --answer` smoke test.
