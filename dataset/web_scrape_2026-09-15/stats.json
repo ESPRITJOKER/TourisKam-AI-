@@ -1,0 +1,52 @@
+{
+  "staging": {
+    "kept": 40,
+    "limit": null,
+    "seconds": 0,
+    "run_at": "2026-09-15T11:57:33"
+  },
+  "fcdo": {
+    "parts": 6,
+    "kept": 20,
+    "limit": null,
+    "seconds": 1,
+    "run_at": "2026-09-15T11:57:34"
+  },
+  "wikivoyage": {
+    "pages: en.wikivoyage.org": 30,
+    "pages: fr.wikivoyage.org": 97,
+    "dropped: too short": 1,
+    "dropped: duplicate": 1,
+    "kept": 487,
+    "limit": null,
+    "seconds": 174,
+    "run_at": "2026-09-15T12:00:28"
+  },
+  "mintoul": {
+    "skipped: spam title": 47,
+    "dropped: fetch failed / 404": 32,
+    "dropped: no content container": 80,
+    "dropped: spam": 5,
+    "dropped: placeholder page": 1,
+    "dropped: post language not fr/en": 1,
+    "pages crawled": 250,
+    "dropped: too short": 11,
+    "dropped: missing content": 14,
+    "dropped: duplicate": 7,
+    "scrubbed: ID numbers": 17,
+    "kept": 99,
+    "limit": null,
+    "seconds": 221,
+    "run_at": "2026-09-15T13:10:46"
+  },
+  "osm": {
+    "regions indexed": 10,
+    "towns": 390,
+    "pois": 1899,
+    "skipped: unnamed / unlocated / other": 286,
+    "kept": 196,
+    "limit": null,
+    "seconds": 543,
+    "run_at": "2026-09-15T12:09:31"
+  }
+}

@@ -38,6 +38,24 @@ python retrieve.py --answer "que voir a Kribi ?"     # full guardrailed answer
 python retrieve.py -t 0.3 "black sand beach"          # lower threshold
 ```
 
+## Web corpus (batch `web_2026-09-15`)
+
+Scrapes cited, source-labeled content into reviewable files, then embeds, evaluates
+and loads it. Details, licenses and filters: `dataset/web_scrape_2026-09-15/README.md`.
+
+```bash
+python scrapers/run_all.py [--only fcdo wikivoyage] [--limit 3]  # -> dataset/web_scrape_2026-09-15/*.jsonl + REPORT.md
+python embed_web.py [--dry-run]       # chunk + batch-embed once (cached, gitignored; uses GEMINI_INGEST_API_KEY)
+python embed_web.py --only osm --batch-size 20 --pause 35   # token-dense text: stay under per-minute limits
+python eval_retrieval.py              # before/after retrieval on fixed EN/FR questions -> EVAL.md (read-only)
+python ingest_web.py [--dry-run]      # load into knowledge_documents (after review)
+python ../scripts/apply_sql.py db/reindex.sql   # rebuild the HNSW index after loading
+```
+
+Sources: MINTOUL (primary), UK FCDO travel advice (primary), OpenStreetMap
+(secondary), Wikivoyage EN/FR (third-party, `unverified`), Kribi→West staging CSV.
+Rollback: `delete from knowledge_documents where metadata->>'batch' = 'web_2026-09-15';`
+
 ## Demo query logs (dashboard, not RAG)
 
 ```bash

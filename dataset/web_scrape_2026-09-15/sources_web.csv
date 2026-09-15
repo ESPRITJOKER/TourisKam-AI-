@@ -1,0 +1,7 @@
+source_id,publisher,title,scope,url,authority_level,license
+SRC-026,Wikivoyage (English),Cameroon travel guides,Community travel guide pages for Cameroon,https://en.wikivoyage.org/wiki/Cameroon,third_party,CC BY-SA 4.0
+SRC-027,Wikivoyage (français),Guides de voyage Cameroun,Pages communautaires de voyage sur le Cameroun,https://fr.wikivoyage.org/wiki/Cameroun,third_party,CC BY-SA 4.0
+SRC-028,OpenStreetMap contributors,Cameroon tourism POIs,"Hotels, attractions, museums, heritage and protected areas via Overpass API",https://www.openstreetmap.org/relation/192830,secondary,ODbL 1.0
+SRC-029,UK FCDO,Foreign travel advice: Cameroon,"Official UK government safety, entry and health advice",https://www.gov.uk/foreign-travel-advice/cameroon,primary,Open Government Licence v3.0
+SRC-030,TourisCam AI team,Kribi-to-West amenities verification dossier,Hand-checked prices/phones with per-row confidence labels,dataset/touriscam_kribi_to_west_staging.csv,third_party,project-internal
+SRC-031,MINTOUL,mintoul.gov.cm website crawl,"Official ministry pages, news, guides and hotel entries (spam filtered)",https://mintoul.gov.cm/,primary,Official public information

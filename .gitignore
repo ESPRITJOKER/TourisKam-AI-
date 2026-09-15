@@ -32,6 +32,10 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Web scrape caches (raw HTTP responses, embeddings) — regenerable
+dataset/web_scrape_*/raw/
+dataset/web_scrape_*/embedded/
+
 # Logs & temp
 *.log
 tmp/

@@ -49,6 +49,23 @@ def gemini_client():
     return genai.Client(api_key=gemini_api_key())
 
 
+def gemini_ingest_api_key() -> str:
+    """Key from a *separate* Google project for bulk embedding jobs.
+
+    Free-tier embedding quota is 1,000 requests/day per project and counts every
+    chunk, so scraping/re-indexing must never share the live bot's key. No
+    fallback to GEMINI_API_KEY on purpose.
+    """
+    return _require("GEMINI_INGEST_API_KEY")
+
+
+@lru_cache(maxsize=1)
+def gemini_ingest_client():
+    from google import genai
+
+    return genai.Client(api_key=gemini_ingest_api_key())
+
+
 def _db_kwargs() -> dict:
     """Build psycopg2 connection kwargs.
 

@@ -211,10 +211,10 @@ create table if not exists knowledge_documents (
   last_verified       date,
   created_at          timestamptz not null default now()
 );
--- ANN index for cosine similarity. ivfflat needs data before it's effective;
--- create/refresh after ingestion. Safe to create empty.
+-- ANN index for cosine similarity. HNSW needs no training data, so it is safe
+-- to create on an empty table (see db/reindex.sql to rebuild an existing index).
 create index if not exists idx_knowledge_embedding
-  on knowledge_documents using ivfflat (embedding vector_cosine_ops) with (lists = 100);
+  on knowledge_documents using hnsw (embedding vector_cosine_ops) with (m = 16, ef_construction = 64);
 create index if not exists idx_knowledge_source_type on knowledge_documents(source_type);
 
 -- RAG retrieval RPC: returns top matches above a similarity threshold.

@@ -63,6 +63,26 @@ semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case
 - Site names reference `amenities_directory.csv`, which isn't in the repo; treat
   them as free-text labels. Drop the table once real usage data exists.
 
+## Dataset — web scrape batch `web_2026-09-15` (✅ LOADED & LIVE, 2026-09-15)
+- Scrapers in `rag/scrapers/` → `dataset/web_scrape_2026-09-15/` (see its README).
+  Scrape complete: **842 records → 1,333 chunks** — Wikivoyage EN/FR 487 (901 chunks),
+  OSM 196 (1,899 POIs), MINTOUL 99 (167; incl. festival calendar + news; injected
+  casino/placeholder pages filtered; 17 CNI numbers scrubbed), FCDO 20 (29),
+  staging CSV 40. UNESCO/TripAdvisor/Booking excluded (robots/ToS).
+- All 1,333 chunks embedded via `GEMINI_INGEST_API_KEY` (OSM needed
+  `--batch-size 20 --pause 35`: per-minute token limit).
+- Eval (`EVAL.md`, 15 EN/FR questions, top-5): plain load crowded out official facts
+  (16/75 official); with rerank 31/75 official, 68 distinct records, top-1 better on
+  13/15. User approved "load all + rerank".
+- ✅ Loaded: `knowledge_documents` 118 → **1,451 rows**; index rebuilt as **HNSW**;
+  **`match_documents` v2 live** (authority boost + max 2 chunks/record, same signature
+  as the n8n node). Verified live on Kribi / Foumban festivals / North-West safety / Lac Nyos.
+- Rollback: `delete from knowledge_documents where metadata->>'batch' = 'web_2026-09-15';`
+  and `python scripts/apply_sql.py db/match_documents_v1.sql` (dumped live v1).
+- Known weak spot: "gorillas" query ranks the generic MINTOUL "Visiter" page above
+  Campo Ma'an / Korup / Lobéké.
+- Found: several MINTOUL URLs cited in `touriscam_dataset_final/sources.csv` are 404.
+
 ## Completed (Day 3 — WhatsApp workflow)
 - ✅ n8n Cloud connected via n8n MCP (`thementalist.app.n8n.cloud`).
 - ✅ Built & validated the `TourisCam WhatsApp` workflow (19 nodes, id
@@ -93,11 +113,18 @@ semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case
 - **Set the Twilio WhatsApp Sandbox "when a message comes in"** to the webhook
   above (POST), then **join** the sandbox from the test phone.
 - (Recommended) set n8n env var `SESSION_HASH_SALT`.
-- **SECURITY: rotate Supabase DB password, Gemini key, Twilio API key/secret, AND
-  the n8n API key after the competition** — several were pasted in chat.
+- **Gemini embedding quota (2026-09-15):** free tier = 1,000 embeds/day per project,
+  every chunk counts. The web-scrape embedding run used the bot key's quota for
+  15 Sep → bot can't embed questions until ~08:00 WAT 16 Sep. Fixed going forward:
+  `GEMINI_INGEST_API_KEY` (separate Google project, verified to have its own quota)
+  is in `.env`; bulk jobs (`embed_web.py`, `eval_retrieval.py`) use only that key.
+- **SECURITY: rotate Supabase DB password, Gemini key, Gemini ingest key, Twilio API
+  key/secret, AND the n8n API key after the competition** — several were pasted in chat.
 
 ## Next Tasks
-- Live WhatsApp test (4 cases in `n8n/README.md`) once credentials are added.
+- Live WhatsApp test (4 cases in `n8n/README.md`) once credentials are added — after
+  ~08:00 WAT 16 Sep (bot key embedding quota reset); include new-corpus questions
+  (Lac Nyos, North-West safety, Foumban festivals) and check answers cite sources.
 - **Phase 2:** voice-note branch (Twilio media fetch → Gemini audio transcription).
 - Day 4: specialized tool tables from the dataset CSVs; Day 5: dashboard.
 

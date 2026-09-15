@@ -57,3 +57,45 @@ def embed_text(text: str, *, task_type: str = "RETRIEVAL_DOCUMENT",
             if attempt < retries - 1:
                 time.sleep(1.5 * (attempt + 1))  # simple backoff
     raise RuntimeError(f"Embedding failed after {retries} attempts: {last_err}")
+
+
+def embed_texts(texts: List[str], *, task_type: str = "RETRIEVAL_DOCUMENT",
+                batch_size: int = 100, retries: int = 4, client=None) -> List[List[float]]:
+    """Return 768-d embeddings for many texts, one API request per `batch_size`.
+
+    Note: the free-tier daily quota counts every text, not every request.
+    Bulk jobs should pass `client=config.gemini_ingest_client()` so they never
+    consume the live bot's quota. Rate-limit errors back off longer than
+    transient ones; a daily-quota error stops immediately.
+    """
+    from google.genai import types
+
+    client = client or gemini_client()
+    out: List[List[float]] = []
+    for start in range(0, len(texts), batch_size):
+        batch = [(t or "").strip() for t in texts[start:start + batch_size]]
+        if not all(batch):
+            raise ValueError(f"Cannot embed empty text (batch starting at {start}).")
+        for attempt in range(retries):
+            try:
+                resp = client.models.embed_content(
+                    model=GEMINI_EMBEDDING_MODEL,
+                    contents=batch,
+                    config=types.EmbedContentConfig(
+                        task_type=task_type,
+                        output_dimensionality=EMBEDDING_DIM,
+                    ),
+                )
+                vectors = [list(e.values) for e in resp.embeddings]
+                if len(vectors) != len(batch) or any(len(v) != EMBEDDING_DIM for v in vectors):
+                    raise RuntimeError("Embedding count/dimension mismatch in batch response.")
+                out.extend(vectors)
+                break
+            except Exception as e:  # noqa: BLE001 - surface after retries
+                if "PerDay" in str(e):  # daily quota (counts every item): retrying can't succeed
+                    raise RuntimeError(f"Daily embedding quota exhausted at item {start}: {e}") from e
+                if attempt == retries - 1:
+                    raise RuntimeError(f"Batch embedding failed at item {start}: {e}") from e
+                rate_limited = "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e)
+                time.sleep(30 * (attempt + 1) if rate_limited else 2 * (attempt + 1))
+    return out
