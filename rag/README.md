@@ -38,11 +38,23 @@ python retrieve.py --answer "que voir a Kribi ?"     # full guardrailed answer
 python retrieve.py -t 0.3 "black sand beach"          # lower threshold
 ```
 
+## Demo query logs (dashboard, not RAG)
+
+```bash
+python load_query_logs.py --dry-run   # validate + profile the CSV
+python load_query_logs.py             # create demo_query_logs, truncate + reload
+```
+
+Loads the **synthetic** `dataset/whatsapp_visitor_query_logs.csv` into
+`demo_query_logs` (DDL in `db/demo_query_logs.sql`) for the MINTOUL dashboard
+demo. No embeddings; kept out of `knowledge_documents` and `query_events`.
+
 ## Files
 - `config.py` — env + Gemini/Supabase clients.
 - `embed.py` — Gemini embedding wrapper (768-d, retries).
 - `ingest.py` — read/clean/chunk/embed/upsert.
 - `retrieve.py` — query embed + `match_documents` RPC + context formatting.
+- `load_query_logs.py` — synthetic query-log CSV → `demo_query_logs` (dashboard demo).
 - `prompt.py` — **guardrailed system prompt** (single source of truth; copied
   into the n8n LLM node in Day 3) + `answer_query()`.
 

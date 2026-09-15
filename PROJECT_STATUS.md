@@ -53,6 +53,16 @@ semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case
 - Note: dataset CSVs → relational tables (hotels/guides/etc. for the specialized
   tools) is a **Day 4** task; will replace the placeholder seed rows then.
 
+## Dataset — synthetic query logs (user-provided, 2026-09-15)
+- `dataset/whatsapp_visitor_query_logs.csv` — 6,200 **simulated** WhatsApp
+  interactions (2026-06-01 → 2026-09-08) for the Day 5 dashboard demo. Checked:
+  no duplicate ids, consistent SOS flags/site→region mapping.
+- Loaded into new `demo_query_logs` table (`db/demo_query_logs.sql`) via
+  `rag/load_query_logs.py` (truncate + reload). NOT in `knowledge_documents`
+  (not RAG knowledge) and NOT in `query_events` (keeps real traffic clean).
+- Site names reference `amenities_directory.csv`, which isn't in the repo; treat
+  them as free-text labels. Drop the table once real usage data exists.
+
 ## Completed (Day 3 — WhatsApp workflow)
 - ✅ n8n Cloud connected via n8n MCP (`thementalist.app.n8n.cloud`).
 - ✅ Built & validated the `TourisCam WhatsApp` workflow (19 nodes, id
@@ -73,15 +83,18 @@ semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case
 - **~55%.** RAG core + WhatsApp orchestration built. Needs live credential wiring
   for the phone test; then Phase 2 voice, specialized tools (Day 4), dashboard (Day 5).
 
-## Blocked (user actions — gate the live WhatsApp test)
-- **Add 3 n8n credentials** (see `n8n/README.md`): Gemini API (Header Auth
-  `x-goog-api-key`), Supabase Postgres (Session pooler), Twilio API.
-- **Enable the Twilio WhatsApp Sandbox** + set its "when a message comes in"
-  webhook to `https://thementalist.app.n8n.cloud/webhook/touriscam-whatsapp`, then
-  **Activate** the workflow.
+## Completed (Day 3 — go-live wiring, 2026-09-13)
+- ✅ 3 n8n credentials created (Header Auth `x-goog-api-key`, Postgres pooler,
+  Twilio API-key) and attached to all 8 nodes via MCP.
+- ✅ Workflow **published/active** (activeVersionId `74a6f175…`, triggerCount 1).
+  Production webhook `https://thementalist.app.n8n.cloud/webhook/touriscam-whatsapp`.
+
+## Blocked (user actions — final gate for the live phone test)
+- **Set the Twilio WhatsApp Sandbox "when a message comes in"** to the webhook
+  above (POST), then **join** the sandbox from the test phone.
 - (Recommended) set n8n env var `SESSION_HASH_SALT`.
-- **SECURITY: rotate Supabase DB password, Gemini key, AND the n8n API key after
-  the competition** — all handled during setup.
+- **SECURITY: rotate Supabase DB password, Gemini key, Twilio API key/secret, AND
+  the n8n API key after the competition** — several were pasted in chat.
 
 ## Next Tasks
 - Live WhatsApp test (4 cases in `n8n/README.md`) once credentials are added.
