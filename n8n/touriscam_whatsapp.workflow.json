@@ -1,300 +1,216 @@
 {
   "name": "TourisCam WhatsApp",
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "meta": {
-    "note": "Day 3 Phase 1 (text round-trip). Live copy: workflow id LACeG3RxqrtB7Jwn on https://thementalist.app.n8n.cloud . Import this file into a fresh n8n instance if the live copy is lost, then attach the 3 credentials (see README). Voice-note branch is Phase 2."
-  },
   "nodes": [
     {
       "name": "WhatsApp Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [0, 0],
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "touriscam-whatsapp",
-        "responseMode": "onReceived",
-        "options": {
-          "responseCode": { "values": { "responseCode": 200 } },
-          "responseData": "<Response></Response>",
-          "responseHeaders": { "entries": [ { "name": "content-type", "value": "text/xml" } ] }
-        }
-      }
+      "webhookId": "96ff5134-251f-4756-9480-b268b2df896d",
+      "parameters": {"httpMethod": "POST", "path": "touriscam-whatsapp", "responseMode": "onReceived", "options": {"responseCode": {"values": {"responseCode": 200}}, "responseData": "<Response></Response>", "responseHeaders": {"entries": [{"name": "content-type", "value": "text/xml"}]}}}
     },
     {
       "name": "Normalize Message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [220, 0],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "const b = $json.body || $json;\nconst rawFrom = b.From || b.from || \"\";\nconst fromPlain = rawFrom.replace(\"whatsapp:\", \"\");\nconst text = (b.Body || b.text || \"\").trim();\nconst numMedia = parseInt(b.NumMedia || b.numMedia || \"0\", 10) || 0;\nconst mediaContentType = b.MediaContentType0 || \"\";\nconst mediaUrl = b.MediaUrl0 || \"\";\nconst isVoice = numMedia > 0 && mediaContentType.indexOf(\"audio\") === 0;\nreturn { from: rawFrom, fromPlain: fromPlain, text: text, numMedia: numMedia, isVoice: isVoice, mediaUrl: mediaUrl, mediaContentType: mediaContentType, queryText: text };"
-      }
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "const b = $json.body || $json;\nconst rawFrom = b.From || b.from || \"\";\nconst fromPlain = rawFrom.replace(\"whatsapp:\", \"\");\nconst text = (b.Body || b.text || \"\").trim();\nconst numMedia = parseInt(b.NumMedia || b.numMedia || \"0\", 10) || 0;\nconst mediaContentType = b.MediaContentType0 || \"\";\nconst mediaUrl = b.MediaUrl0 || \"\";\nconst isVoice = numMedia > 0 && mediaContentType.indexOf(\"audio\") === 0;\nreturn { from: rawFrom, fromPlain: fromPlain, text: text, numMedia: numMedia, isVoice: isVoice, mediaUrl: mediaUrl, mediaContentType: mediaContentType, queryText: text };"}
+    },
+    {
+      "name": "Has Text?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [330, -180],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"id": "has-text", "leftValue": "={{ $json.queryText }}", "rightValue": "", "operator": {"type": "string", "operation": "notEmpty", "singleValue": true}}], "combinator": "and"}, "options": {}}
     },
     {
       "name": "Gemini Embed Query",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [440, 0],
-      "parameters": {
-        "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ { \"content\": { \"parts\": [ { \"text\": $json.queryText } ] }, \"taskType\": \"RETRIEVAL_QUERY\", \"outputDimensionality\": 768 } }}",
-        "options": { "timeout": 30000 }
-      },
+      "parameters": {"method": "POST", "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "sendBody": true, "contentType": "json", "specifyBody": "json", "jsonBody": "={{ { \"content\": { \"parts\": [ { \"text\": $json.queryText } ] }, \"taskType\": \"RETRIEVAL_QUERY\", \"outputDimensionality\": 768 } }}", "options": {"timeout": 30000}},
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 2000,
       "onError": "continueErrorOutput",
-      "credentials": { "httpHeaderAuth": { "name": "Gemini API" } }
+      "credentials": {"httpHeaderAuth": {"name": "Gemini API"}}
     },
     {
       "name": "Build Retrieval Query",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [660, 0],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "const emb = ($json.embedding && $json.embedding.values) ? $json.embedding.values : [];\nconst literal = \"[\" + emb.join(\",\") + \"]\";\nconst sqlQuery = \"select * from match_documents('\" + literal + \"'::vector, 5, 0.5)\";\nreturn { sqlQuery: sqlQuery, embeddingLength: emb.length };"
-      }
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "const emb = ($json.embedding && $json.embedding.values) ? $json.embedding.values : [];\nconst literal = \"[\" + emb.join(\",\") + \"]\";\nconst raw = ($(\"Normalize Message\").first().json.queryText || \"\").toLowerCase();\nconst q = raw.normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\");\n// Only [a-z0-9-] word tokens are ever placed into SQL.\nconst padded = \" \" + q.replace(/[^a-z0-9-]+/g, \" \") + \" \";\nconst hasWord = function (w) { return padded.indexOf(\" \" + w + \" \") >= 0; };\nconst parts = [\"(select id, title, content, source, source_type, verification_status, similarity from match_documents('\" + literal + \"'::vector, 5, 0.5))\"];\n\n// Safety: add official UK FCDO regional-risk advice when a high-risk area is mentioned.\nconst riskAreas = [\n  { title: \"North-West and South-West\", words: [\"north-west\", \"northwest\", \"north west\", \"nord-ouest\", \"nord ouest\", \"south-west\", \"southwest\", \"south west\", \"sud-ouest\", \"sud ouest\", \"bamenda\", \"nyos\", \"wum\", \"kumbo\", \"bafut\", \"ndop\", \"buea\", \"limbe\", \"kumba\", \"mamfe\", \"tiko\", \"korup\", \"mount cameroon\", \"mont cameroun\"] },\n  { title: \"Far-North\", words: [\"far north\", \"far-north\", \"extreme-nord\", \"extreme nord\", \"maroua\", \"rhumsiki\", \"waza\", \"kousseri\", \"mokolo\", \"mora\"] },\n  { title: \"Central African Republic border\", words: [\"garoua-boulai\", \"batouri\", \"central african\", \"centrafrique\"] }\n];\nconst advisories = [];\nfor (let i = 0; i < riskAreas.length; i++) {\n  for (let w = 0; w < riskAreas[i].words.length; w++) {\n    if (hasWord(riskAreas[i].words[w])) { advisories.push(riskAreas[i].title); break; }\n  }\n}\nif (advisories.length) {\n  const conds = [];\n  for (let i = 0; i < advisories.length; i++) { conds.push(\"title like '%Regional risks%\" + advisories[i] + \"%'\"); }\n  parts.push(\"(select id, title, content, source, source_type, verification_status, 1.0::float as similarity from knowledge_documents where metadata->>'source_key' = 'fcdo' and (\" + conds.join(\" or \") + \") order by title, chunk_index limit 3)\");\n}\n\n// Tariff Guard: add matching tariff rows when the message asks about prices.\nconst pricingWords = [\"price\", \"prices\", \"prix\", \"cost\", \"costs\", \"cout\", \"coute\", \"fare\", \"fares\", \"tarif\", \"tarifs\", \"combien\", \"how much\", \"taxi\", \"moto\", \"ticket\", \"billet\", \"entree\", \"entry\", \"fee\", \"fees\", \"frais\", \"payer\", \"pay\"];\nlet pricing = false;\nfor (let i = 0; i < pricingWords.length; i++) { if (hasWord(pricingWords[i])) { pricing = true; break; } }\nif (pricing) {\n  const stop = [\"what\", \"much\", \"does\", \"from\", \"with\", \"that\", \"this\", \"there\", \"pour\", \"dans\", \"avec\", \"quel\", \"quelle\", \"quels\", \"combien\", \"price\", \"prices\", \"prix\", \"cost\", \"costs\", \"cout\", \"coute\", \"how\", \"the\", \"est\", \"une\", \"des\", \"les\", \"aux\", \"is\", \"are\", \"for\", \"per\", \"par\", \"fare\", \"fares\", \"tarif\", \"tarifs\"];\n  const words = padded.trim().split(\" \");\n  const keys = [];\n  for (let i = 0; i < words.length && keys.length < 8; i++) {\n    const w = words[i];\n    if (w.length >= 4 && stop.indexOf(w) < 0 && keys.indexOf(w) < 0 && /^[a-z0-9-]+$/.test(w)) { keys.push(w); }\n  }\n  if (keys.length) {\n    const hits = [];\n    for (let i = 0; i < keys.length; i++) { hits.push(\"(search_text like '%\" + keys[i] + \"%')::int\"); }\n    parts.push(\"(select id, 'Tariff table' as title, 'Tariff: ' || description || coalesce('. Unit: ' || unit, '') || case when time_of_day <> 'any' then ' (' || time_of_day || ')' else '' end || coalesce('. Note: ' || notes, '') as content, source, 'tariff' as source_type, verification_status, 0.99::float as similarity from tariffs where search_text is not null and (\" + hits.join(\" + \") + \") > 0 order by (\" + hits.join(\" + \") + \") desc limit 3)\");\n  }\n}\nreturn { sqlQuery: parts.join(\" union all \"), embeddingLength: emb.length, advisories: advisories, pricing: pricing };"}
     },
     {
       "name": "Retrieve Documents",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
       "position": [880, 0],
-      "parameters": {
-        "resource": "database",
-        "operation": "executeQuery",
-        "query": "={{ $json.sqlQuery }}"
-      },
+      "parameters": {"resource": "database", "operation": "executeQuery", "query": "={{ $json.sqlQuery }}"},
       "retryOnFail": true,
       "maxTries": 2,
       "alwaysOutputData": true,
       "onError": "continueErrorOutput",
-      "credentials": { "postgres": { "name": "Supabase Postgres" } }
+      "credentials": {"postgres": {"name": "Supabase Postgres"}}
     },
     {
       "name": "Format Context",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1100, 0],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "const rows = $input.all();\nconst nz = $(\"Normalize Message\").first().json;\nconst labels = { verified: \"VERIFIED\", benchmark: \"BENCHMARK\", estimated: \"ESTIMATED\", unverified: \"UNVERIFIED\", unavailable: \"UNAVAILABLE\" };\nconst parts = [];\nlet matchCount = 0;\nfor (let i = 0; i < rows.length; i++) {\n  const j = rows[i].json || {};\n  if (!j.content) { continue; }\n  matchCount++;\n  const lab = labels[j.verification_status] || \"UNVERIFIED\";\n  const title = j.title ? j.title : \"Untitled\";\n  const src = j.source ? (\"\\nSource: \" + j.source) : \"\";\n  parts.push(\"[\" + lab + \"] \" + title + \"\\n\" + j.content + src);\n}\nconst contextBlock = matchCount > 0 ? parts.join(\"\\n\\n---\\n\\n\") : \"(no verified information was retrieved for this query)\";\nconst q = (nz.queryText || \"\").toLowerCase();\nlet language = \"en\";\nif (q.indexOf(\"que \") >= 0 || q.indexOf(\"quoi\") >= 0 || q.indexOf(\"combien\") >= 0 || q.indexOf(\"bonjour\") >= 0 || q.indexOf(\"voir\") >= 0 || q.indexOf(\"prix\") >= 0 || q.indexOf(\"merci\") >= 0 || q.indexOf(\"pour \") >= 0) { language = \"fr\"; }\nif (q.indexOf(\"wetin\") >= 0 || q.indexOf(\"abeg\") >= 0 || q.indexOf(\"na so\") >= 0 || q.indexOf(\"comot\") >= 0) { language = \"pidgin\"; }\nconst cities = [\"limbe\",\"kribi\",\"douala\",\"yaounde\",\"foumban\",\"buea\",\"bamenda\",\"bafoussam\"];\nlet destination = \"\";\nfor (let c = 0; c < cities.length; c++) { if (q.indexOf(cities[c]) >= 0) { destination = cities[c]; break; } }\nlet queryCategory = \"other\";\nif (q.indexOf(\"price\") >= 0 || q.indexOf(\"prix\") >= 0 || q.indexOf(\"cost\") >= 0 || q.indexOf(\"fare\") >= 0 || q.indexOf(\"combien\") >= 0 || q.indexOf(\"tarif\") >= 0) { queryCategory = \"pricing\"; }\nelse if (q.indexOf(\"hotel\") >= 0 || q.indexOf(\"lodg\") >= 0 || q.indexOf(\"accommod\") >= 0 || q.indexOf(\"sleep\") >= 0) { queryCategory = \"hotels\"; }\nelse if (q.indexOf(\"guide\") >= 0) { queryCategory = \"guides\"; }\nelse if (q.indexOf(\"taxi\") >= 0 || q.indexOf(\"moto\") >= 0 || q.indexOf(\"bus\") >= 0 || q.indexOf(\"transport\") >= 0) { queryCategory = \"transport\"; }\nelse if (q.indexOf(\"emergency\") >= 0 || q.indexOf(\"police\") >= 0 || q.indexOf(\"hospital\") >= 0 || q.indexOf(\"urgence\") >= 0 || q.indexOf(\"secours\") >= 0) { queryCategory = \"emergency\"; }\nelse if (q.indexOf(\"see\") >= 0 || q.indexOf(\"visit\") >= 0 || q.indexOf(\"attraction\") >= 0 || q.indexOf(\"voir\") >= 0 || q.indexOf(\"beach\") >= 0 || q.indexOf(\"waterfall\") >= 0 || q.indexOf(\"museum\") >= 0 || q.indexOf(\"festival\") >= 0) { queryCategory = \"attractions\"; }\nconst intent = queryCategory;\nreturn [{ json: { contextBlock: contextBlock, matchCount: matchCount, queryText: nz.queryText, fromPlain: nz.fromPlain, rawMessage: nz.text, isVoice: nz.isVoice, language: language, destination: destination, intent: intent, queryCategory: queryCategory } }];"
-      }
+      "parameters": {"mode": "runOnceForAllItems", "language": "javaScript", "jsCode": "const rows = $input.all();\nconst nz = $(\"Normalize Message\").first().json;\nconst labels = { verified: \"VERIFIED\", benchmark: \"BENCHMARK\", estimated: \"ESTIMATED\", unverified: \"UNVERIFIED\", unavailable: \"UNAVAILABLE\" };\nconst parts = [];\nconst seen = {};\nlet matchCount = 0;\nfor (let i = 0; i < rows.length; i++) {\n  const j = rows[i].json || {};\n  if (!j.content || (j.id && seen[j.id])) { continue; }\n  if (j.id) { seen[j.id] = true; }\n  matchCount++;\n  const lab = labels[j.verification_status] || \"UNVERIFIED\";\n  const title = j.title ? j.title : \"Untitled\";\n  const src = j.source ? (\"\\nSource: \" + j.source) : \"\";\n  parts.push(\"[\" + lab + \"] \" + title + \"\\n\" + j.content + src);\n}\nconst contextBlock = matchCount > 0 ? parts.join(\"\\n\\n---\\n\\n\") : \"(no verified information was retrieved for this query)\";\nconst q = (nz.queryText || \"\").toLowerCase();\nlet language = \"en\";\nif (q.indexOf(\"que \") >= 0 || q.indexOf(\"quoi\") >= 0 || q.indexOf(\"combien\") >= 0 || q.indexOf(\"bonjour\") >= 0 || q.indexOf(\"voir\") >= 0 || q.indexOf(\"prix\") >= 0 || q.indexOf(\"merci\") >= 0 || q.indexOf(\"pour \") >= 0) { language = \"fr\"; }\nif (q.indexOf(\"wetin\") >= 0 || q.indexOf(\"abeg\") >= 0 || q.indexOf(\"na so\") >= 0 || q.indexOf(\"comot\") >= 0) { language = \"pidgin\"; }\nconst cities = [\"limbe\",\"kribi\",\"douala\",\"yaounde\",\"foumban\",\"buea\",\"bamenda\",\"bafoussam\"];\nlet destination = \"\";\nfor (let c = 0; c < cities.length; c++) { if (q.indexOf(cities[c]) >= 0) { destination = cities[c]; break; } }\nlet queryCategory = \"other\";\nif (q.indexOf(\"price\") >= 0 || q.indexOf(\"prix\") >= 0 || q.indexOf(\"cost\") >= 0 || q.indexOf(\"fare\") >= 0 || q.indexOf(\"combien\") >= 0 || q.indexOf(\"tarif\") >= 0) { queryCategory = \"pricing\"; }\nelse if (q.indexOf(\"hotel\") >= 0 || q.indexOf(\"lodg\") >= 0 || q.indexOf(\"accommod\") >= 0 || q.indexOf(\"sleep\") >= 0) { queryCategory = \"hotels\"; }\nelse if (q.indexOf(\"guide\") >= 0) { queryCategory = \"guides\"; }\nelse if (q.indexOf(\"taxi\") >= 0 || q.indexOf(\"moto\") >= 0 || q.indexOf(\"bus\") >= 0 || q.indexOf(\"transport\") >= 0) { queryCategory = \"transport\"; }\nelse if (q.indexOf(\"emergency\") >= 0 || q.indexOf(\"police\") >= 0 || q.indexOf(\"hospital\") >= 0 || q.indexOf(\"urgence\") >= 0 || q.indexOf(\"secours\") >= 0) { queryCategory = \"emergency\"; }\nelse if (q.indexOf(\"see\") >= 0 || q.indexOf(\"visit\") >= 0 || q.indexOf(\"attraction\") >= 0 || q.indexOf(\"voir\") >= 0 || q.indexOf(\"beach\") >= 0 || q.indexOf(\"waterfall\") >= 0 || q.indexOf(\"museum\") >= 0 || q.indexOf(\"festival\") >= 0) { queryCategory = \"attractions\"; }\nconst intent = queryCategory;\nreturn [{ json: { contextBlock: contextBlock, matchCount: matchCount, queryText: nz.queryText, fromPlain: nz.fromPlain, rawMessage: nz.text, isVoice: nz.isVoice, language: language, destination: destination, intent: intent, queryCategory: queryCategory } }];"}
     },
     {
       "name": "Add System Prompt",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [1320, 0],
-      "parameters": {
-        "mode": "manual",
-        "includeOtherFields": true,
-        "assignments": {
-          "assignments": [
-            {
-              "id": "sysprompt",
-              "name": "systemPrompt",
-              "type": "string",
-              "value": "You are TourisCam AI, an autonomous tourism concierge for Cameroon, speaking to tourists over WhatsApp. You are NOT a generic chatbot; you are a controlled tourism assistant for Cameroon.\n\nLANGUAGE\n- Detect the user's language and reply in it: French -> French, English -> English, Cameroon Pidgin English -> understand and reply in natural Pidgin.\n- If the user mixes languages, mirror their style. Never produce awkward literal translations.\n\nGROUNDING & HONESTY (critical)\n- Prefer the VERIFIED INFORMATION provided in the context below over your own memory.\n- If the context does not contain the answer, say so plainly, e.g. \"I couldn't verify that information\" (in the user's language). Do NOT invent attractions, opening hours, prices, phone numbers, or sources.\n- When you use context, you may note its trust level (verified / benchmark / estimated) when it matters to the user.\n\nTARIFF RULES\n- Never invent a price. Only state a price that appears in the provided context, and label it clearly (verified, benchmark, or estimated).\n- If no price is available, say the price is unavailable and, if useful, give general guidance (e.g. \"agree the fare before you start the trip\").\n\nEMERGENCY RULES\n- You may share verified emergency contact information from the context.\n- NEVER claim that TourisCam has contacted or dispatched emergency services — you cannot dispatch anyone.\n\nSTYLE\n- Be concise and friendly. WhatsApp-length answers. Use short paragraphs or a few bullet points. No markdown headers.\n- Focus on Cameroon tourism: destinations, attractions, opening hours, benchmark prices, verified guides, emergency info. Politely redirect off-topic requests back to Cameroon tourism."
-            }
-          ]
-        }
-      }
+      "parameters": {"mode": "manual", "includeOtherFields": true, "assignments": {"assignments": [{"id": "sysprompt", "name": "systemPrompt", "type": "string", "value": "You are TourisCam AI, an autonomous tourism concierge for Cameroon, speaking to tourists over WhatsApp. You are NOT a generic chatbot; you are a controlled tourism assistant for Cameroon.\n\nLANGUAGE\n- Detect the user's language and reply in it: French -> French, English -> English, Cameroon Pidgin English -> understand and reply in natural Pidgin.\n- If the user mixes languages, mirror their style. Never produce awkward literal translations.\n\nGROUNDING & HONESTY (critical)\n- Prefer the VERIFIED INFORMATION provided in the context below over your own memory.\n- If the context does not contain the answer, say so plainly, e.g. \"I couldn't verify that information\" (in the user's language). Do NOT invent attractions, opening hours, prices, phone numbers, or sources.\n- When you use context, you may note its trust level (verified / benchmark / estimated) when it matters to the user.\n\nTARIFF RULES\n- Never invent a price. Only state a price that appears in the provided context, and label it clearly (verified, benchmark, or estimated).\n- Prefer entries that start with \"Tariff:\" (price tables) over prices mentioned in other sources, and say prices are indicative.\n- If no price is available, say the price is unavailable and, if useful, give general guidance (e.g. \"agree the fare before you start the trip\").\n\nSAFETY ADVISORIES\n- If the context contains an official travel advisory (e.g. UK FCDO travel advice) for the place the user asks about, mention it briefly at the start of your reply and name its source. Do not exaggerate, soften or invent risk levels.\n\nEMERGENCY RULES\n- You may share verified emergency contact information from the context.\n- NEVER claim that TourisCam has contacted or dispatched emergency services \u2014 you cannot dispatch anyone.\n\nSTYLE\n- Be concise and friendly. Keep replies under 900 characters. Use short paragraphs or a few \"-\" bullet points.\n- WhatsApp formatting only: *bold* with single asterisks, _italic_ with underscores. Never use ** or # headings.\n- Focus on Cameroon tourism: destinations, attractions, opening hours, benchmark prices, verified guides, emergency info. Politely redirect off-topic requests back to Cameroon tourism.\n"}]}}
     },
     {
       "name": "Build Generation Request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1540, 0],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "const sys = $json.systemPrompt;\nconst ctx = $json.contextBlock;\nconst q = $json.queryText;\nconst userPrompt = \"VERIFIED INFORMATION (retrieved for this query):\\n\" + ctx + \"\\n\\nUSER MESSAGE:\\n\" + q + \"\\n\\nReply to the user following all the rules above, in the user's language.\";\nconst geminiBody = { system_instruction: { parts: [ { text: sys } ] }, contents: [ { role: \"user\", parts: [ { text: userPrompt } ] } ], generation_config: { temperature: 0.3, max_output_tokens: 800, thinking_config: { thinking_budget: 0 } } };\nreturn { geminiBody: geminiBody, queryText: q, fromPlain: $json.fromPlain, rawMessage: $json.rawMessage, language: $json.language, destination: $json.destination, intent: $json.intent, queryCategory: $json.queryCategory, isVoice: $json.isVoice };"
-      }
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "const sys = $json.systemPrompt;\nconst ctx = $json.contextBlock;\nconst q = $json.queryText;\nconst userPrompt = \"VERIFIED INFORMATION (retrieved for this query):\\n\" + ctx + \"\\n\\nUSER MESSAGE:\\n\" + q + \"\\n\\nReply to the user following all the rules above, in the user's language.\";\nconst geminiBody = { system_instruction: { parts: [ { text: sys } ] }, contents: [ { role: \"user\", parts: [ { text: userPrompt } ] } ], generation_config: { temperature: 0.3, max_output_tokens: 800, thinking_config: { thinking_budget: 0 } } };\nreturn { geminiBody: geminiBody, queryText: q, fromPlain: $json.fromPlain, rawMessage: $json.rawMessage, language: $json.language, destination: $json.destination, intent: $json.intent, queryCategory: $json.queryCategory, isVoice: $json.isVoice };"}
     },
     {
       "name": "Gemini Generate Answer",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [1760, 0],
-      "parameters": {
-        "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.geminiBody }}",
-        "options": { "timeout": 60000 }
-      },
+      "parameters": {"method": "POST", "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "sendBody": true, "contentType": "json", "specifyBody": "json", "jsonBody": "={{ $json.geminiBody }}", "options": {"timeout": 60000}},
       "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 3000,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
       "onError": "continueErrorOutput",
-      "credentials": { "httpHeaderAuth": { "name": "Gemini API" } }
+      "credentials": {"httpHeaderAuth": {"name": "Gemini API"}}
     },
     {
       "name": "Extract Answer",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1980, 0],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "const cands = $json.candidates || [];\nlet answer = \"\";\nif (cands.length && cands[0].content && cands[0].content.parts) {\n  for (let i = 0; i < cands[0].content.parts.length; i++) { answer += (cands[0].content.parts[i].text || \"\"); }\n}\nanswer = answer.trim();\nconst bg = $(\"Build Generation Request\").first().json;\nlet status = \"ok\";\nif (!answer) { answer = \"I'm having trouble accessing that information right now. Please try again shortly.\"; status = \"error\"; }\nreturn { answer: answer, fromPlain: bg.fromPlain, rawMessage: bg.rawMessage, normalizedMessage: bg.queryText, language: bg.language, destination: bg.destination, intent: bg.intent, queryCategory: bg.queryCategory, isVoice: bg.isVoice, responseStatus: status, toolUsed: \"tourism_search\", complaintFlag: false };"
-      }
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "const cands = $json.candidates || [];\nlet answer = \"\";\nif (cands.length && cands[0].content && cands[0].content.parts) {\n  for (let i = 0; i < cands[0].content.parts.length; i++) { answer += (cands[0].content.parts[i].text || \"\"); }\n}\n// WhatsApp formatting (mirrors rag/prompt.py format_for_whatsapp): **x** -> *x*, no # headings.\nanswer = answer.trim().replace(/\\*\\*([\\s\\S]+?)\\*\\*/g, \"*$1*\").replace(/^[ \\t]{0,3}#{1,6}[ \\t]*/gm, \"\").trim();\n// Twilio rejects WhatsApp bodies over 1,600 characters: cap at 1,500 on a sentence boundary.\nconst LIMIT = 1500;\nif (answer.length > LIMIT) {\n  const cut = answer.slice(0, LIMIT);\n  const end = Math.max(cut.lastIndexOf(\". \"), cut.lastIndexOf(\"! \"), cut.lastIndexOf(\"? \"), cut.lastIndexOf(\"\\n\"));\n  answer = (end > LIMIT / 2 ? cut.slice(0, end + 1) : cut).trim() + \" \u2026\";\n}\nconst bg = $(\"Build Generation Request\").first().json;\nlet status = \"ok\";\nif (!answer) { answer = \"I'm having trouble accessing that information right now. Please try again shortly.\"; status = \"error\"; }\nlet usedTariff = false;\nconst docs = $(\"Retrieve Documents\").all();\nfor (let i = 0; i < docs.length; i++) { if (docs[i].json && docs[i].json.source_type === \"tariff\") { usedTariff = true; break; } }\nreturn { answer: answer, fromPlain: bg.fromPlain, rawMessage: bg.rawMessage, normalizedMessage: bg.queryText, language: bg.language, destination: bg.destination, intent: bg.intent, queryCategory: bg.queryCategory, isVoice: bg.isVoice, responseStatus: status, toolUsed: usedTariff ? \"tariff_guard\" : \"tourism_search\", complaintFlag: false };"}
     },
     {
       "name": "Send WhatsApp Reply",
       "type": "n8n-nodes-base.twilio",
       "typeVersion": 1,
       "position": [2200, 0],
-      "parameters": {
-        "resource": "sms",
-        "operation": "send",
-        "from": "+14155238886",
-        "to": "={{ $(\"Extract Answer\").first().json.fromPlain }}",
-        "toWhatsapp": true,
-        "message": "={{ $(\"Extract Answer\").first().json.answer }}"
-      },
-      "credentials": { "twilioApi": { "name": "Twilio" } }
+      "parameters": {"resource": "sms", "operation": "send", "from": "+14155238886", "to": "={{ $(\"Extract Answer\").first().json.fromPlain }}", "toWhatsapp": true, "message": "={{ $(\"Extract Answer\").first().json.answer }}"},
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {"twilioApi": {"name": "Twilio"}}
     },
     {
       "name": "Hash Session",
       "type": "n8n-nodes-base.crypto",
       "typeVersion": 2,
       "position": [2420, 0],
-      "parameters": {
-        "action": "hash",
-        "type": "SHA256",
-        "value": "={{ ($env.SESSION_HASH_SALT || \"touriscam-salt-2026\") + $(\"Extract Answer\").first().json.fromPlain }}",
-        "dataPropertyName": "sessionId",
-        "encoding": "hex"
-      }
+      "notes": "Replace <SESSION_HASH_SALT> with a random secret before activating (see n8n/README.md). n8n Cloud blocks $env in nodes.",
+      "parameters": {"action": "hash", "type": "SHA256", "value": "={{ \"<SESSION_HASH_SALT>\" + $(\"Extract Answer\").first().json.fromPlain }}", "dataPropertyName": "sessionId", "encoding": "hex"}
     },
     {
       "name": "Build Tourist Query Row",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2640, 0],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "const ea = $(\"Extract Answer\").first().json;\nreturn { session_id: $json.sessionId, channel: \"whatsapp\", raw_message: ea.rawMessage, normalized_message: ea.normalizedMessage, language_detected: ea.language, intent: ea.intent, is_voice: ea.isVoice };"
-      }
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "const ea = $(\"Extract Answer\").first().json;\nreturn { session_id: $json.sessionId, channel: \"whatsapp\", raw_message: ea.rawMessage, normalized_message: ea.normalizedMessage, language_detected: ea.language, intent: ea.intent, is_voice: ea.isVoice };"}
     },
     {
       "name": "Log Tourist Query",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
       "position": [2860, 0],
-      "parameters": {
-        "resource": "database",
-        "operation": "insert",
-        "schema": { "__rl": true, "mode": "name", "value": "public" },
-        "table": { "__rl": true, "mode": "name", "value": "tourist_queries" },
-        "columns": { "mappingMode": "autoMapInputData", "value": null, "matchingColumns": [], "schema": [] }
-      },
-      "credentials": { "postgres": { "name": "Supabase Postgres" } }
+      "parameters": {"resource": "database", "operation": "insert", "schema": {"__rl": true, "mode": "name", "value": "public"}, "table": {"__rl": true, "mode": "name", "value": "tourist_queries"}, "columns": {"mappingMode": "autoMapInputData", "value": null, "matchingColumns": [], "schema": []}},
+      "credentials": {"postgres": {"name": "Supabase Postgres"}}
     },
     {
       "name": "Build Event Row",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [3080, 0],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "const ea = $(\"Extract Answer\").first().json;\nconst tq = $(\"Log Tourist Query\").first().json;\nreturn { query_id: (tq && tq.id) ? tq.id : null, destination: ea.destination ? ea.destination : null, intent: ea.intent, language: ea.language, query_category: ea.queryCategory, tool_used: ea.toolUsed, response_status: ea.responseStatus, complaint_flag: ea.complaintFlag };"
-      }
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "const ea = $(\"Extract Answer\").first().json;\nconst tq = $(\"Log Tourist Query\").first().json;\nreturn { query_id: (tq && tq.id) ? tq.id : null, destination: ea.destination ? ea.destination : null, intent: ea.intent, language: ea.language, query_category: ea.queryCategory, tool_used: ea.toolUsed, response_status: ea.responseStatus, complaint_flag: ea.complaintFlag };"}
     },
     {
       "name": "Log Query Event",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
       "position": [3300, 0],
-      "parameters": {
-        "resource": "database",
-        "operation": "insert",
-        "schema": { "__rl": true, "mode": "name", "value": "public" },
-        "table": { "__rl": true, "mode": "name", "value": "query_events" },
-        "columns": { "mappingMode": "autoMapInputData", "value": null, "matchingColumns": [], "schema": [] }
-      },
-      "credentials": { "postgres": { "name": "Supabase Postgres" } }
+      "parameters": {"resource": "database", "operation": "insert", "schema": {"__rl": true, "mode": "name", "value": "public"}, "table": {"__rl": true, "mode": "name", "value": "query_events"}, "columns": {"mappingMode": "autoMapInputData", "value": null, "matchingColumns": [], "schema": []}},
+      "credentials": {"postgres": {"name": "Supabase Postgres"}}
     },
     {
       "name": "Send Fallback Reply",
       "type": "n8n-nodes-base.twilio",
       "typeVersion": 1,
       "position": [1760, 260],
-      "parameters": {
-        "resource": "sms",
-        "operation": "send",
-        "from": "+14155238886",
-        "to": "={{ $(\"Normalize Message\").first().json.fromPlain }}",
-        "toWhatsapp": true,
-        "message": "I'm having trouble accessing that information right now. Please try again shortly."
-      },
-      "credentials": { "twilioApi": { "name": "Twilio" } }
+      "parameters": {"resource": "sms", "operation": "send", "from": "+14155238886", "to": "={{ $(\"Normalize Message\").first().json.fromPlain }}", "toWhatsapp": true, "message": "I'm having trouble accessing that information right now. Please try again shortly."},
+      "credentials": {"twilioApi": {"name": "Twilio"}}
     },
     {
       "name": "Build Error Event",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1980, 260],
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "language": "javaScript",
-        "jsCode": "return { query_id: null, destination: null, intent: null, language: null, query_category: \"other\", tool_used: \"tourism_search\", response_status: \"error\", complaint_flag: false };"
-      }
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "return { query_id: null, destination: null, intent: null, language: null, query_category: \"other\", tool_used: \"tourism_search\", response_status: \"error\", complaint_flag: false };"}
     },
     {
       "name": "Log Error Event",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
       "position": [2200, 260],
-      "parameters": {
-        "resource": "database",
-        "operation": "insert",
-        "schema": { "__rl": true, "mode": "name", "value": "public" },
-        "table": { "__rl": true, "mode": "name", "value": "query_events" },
-        "columns": { "mappingMode": "autoMapInputData", "value": null, "matchingColumns": [], "schema": [] }
-      },
-      "credentials": { "postgres": { "name": "Supabase Postgres" } }
+      "parameters": {"resource": "database", "operation": "insert", "schema": {"__rl": true, "mode": "name", "value": "public"}, "table": {"__rl": true, "mode": "name", "value": "query_events"}, "columns": {"mappingMode": "autoMapInputData", "value": null, "matchingColumns": [], "schema": []}},
+      "credentials": {"postgres": {"name": "Supabase Postgres"}}
+    },
+    {
+      "name": "Send Text-Only Reply",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [440, 480],
+      "parameters": {"resource": "sms", "operation": "send", "from": "+14155238886", "to": "={{ $(\"Normalize Message\").first().json.fromPlain }}", "toWhatsapp": true, "message": "For now I can only read text messages - please type your question. / Pour l'instant je ne lis que les messages texte : merci d'\u00e9crire votre question."},
+      "credentials": {"twilioApi": {"name": "Twilio"}}
+    },
+    {
+      "name": "Build Unsupported Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 480],
+      "parameters": {"mode": "runOnceForEachItem", "language": "javaScript", "jsCode": "return { query_id: null, destination: null, intent: null, language: null, query_category: \"other\", tool_used: \"none\", response_status: \"unsupported_media\", complaint_flag: false };"}
+    },
+    {
+      "name": "Log Unsupported Event",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [880, 480],
+      "parameters": {"resource": "database", "operation": "insert", "schema": {"__rl": true, "mode": "name", "value": "public"}, "table": {"__rl": true, "mode": "name", "value": "query_events"}, "columns": {"mappingMode": "autoMapInputData", "value": null, "matchingColumns": [], "schema": []}},
+      "credentials": {"postgres": {"name": "Supabase Postgres"}}
     }
   ],
   "connections": {
-    "WhatsApp Webhook": { "main": [[{ "node": "Normalize Message", "type": "main", "index": 0 }]] },
-    "Normalize Message": { "main": [[{ "node": "Gemini Embed Query", "type": "main", "index": 0 }]] },
-    "Gemini Embed Query": { "main": [[{ "node": "Build Retrieval Query", "type": "main", "index": 0 }], [{ "node": "Send Fallback Reply", "type": "main", "index": 0 }]] },
-    "Build Retrieval Query": { "main": [[{ "node": "Retrieve Documents", "type": "main", "index": 0 }]] },
-    "Retrieve Documents": { "main": [[{ "node": "Format Context", "type": "main", "index": 0 }], [{ "node": "Send Fallback Reply", "type": "main", "index": 0 }]] },
-    "Format Context": { "main": [[{ "node": "Add System Prompt", "type": "main", "index": 0 }]] },
-    "Add System Prompt": { "main": [[{ "node": "Build Generation Request", "type": "main", "index": 0 }]] },
-    "Build Generation Request": { "main": [[{ "node": "Gemini Generate Answer", "type": "main", "index": 0 }]] },
-    "Gemini Generate Answer": { "main": [[{ "node": "Extract Answer", "type": "main", "index": 0 }], [{ "node": "Send Fallback Reply", "type": "main", "index": 0 }]] },
-    "Extract Answer": { "main": [[{ "node": "Send WhatsApp Reply", "type": "main", "index": 0 }]] },
-    "Send WhatsApp Reply": { "main": [[{ "node": "Hash Session", "type": "main", "index": 0 }]] },
-    "Hash Session": { "main": [[{ "node": "Build Tourist Query Row", "type": "main", "index": 0 }]] },
-    "Build Tourist Query Row": { "main": [[{ "node": "Log Tourist Query", "type": "main", "index": 0 }]] },
-    "Log Tourist Query": { "main": [[{ "node": "Build Event Row", "type": "main", "index": 0 }]] },
-    "Build Event Row": { "main": [[{ "node": "Log Query Event", "type": "main", "index": 0 }]] },
-    "Send Fallback Reply": { "main": [[{ "node": "Build Error Event", "type": "main", "index": 0 }]] },
-    "Build Error Event": { "main": [[{ "node": "Log Error Event", "type": "main", "index": 0 }]] }
-  }
+    "WhatsApp Webhook": {"main": [[{"node": "Normalize Message", "type": "main", "index": 0}]]},
+    "Normalize Message": {"main": [[{"node": "Has Text?", "type": "main", "index": 0}]]},
+    "Has Text?": {"main": [[{"node": "Gemini Embed Query", "type": "main", "index": 0}], [{"node": "Send Text-Only Reply", "type": "main", "index": 0}]]},
+    "Gemini Embed Query": {"main": [[{"node": "Build Retrieval Query", "type": "main", "index": 0}], [{"node": "Send Fallback Reply", "type": "main", "index": 0}]]},
+    "Build Retrieval Query": {"main": [[{"node": "Retrieve Documents", "type": "main", "index": 0}]]},
+    "Retrieve Documents": {"main": [[{"node": "Format Context", "type": "main", "index": 0}], [{"node": "Send Fallback Reply", "type": "main", "index": 0}]]},
+    "Format Context": {"main": [[{"node": "Add System Prompt", "type": "main", "index": 0}]]},
+    "Add System Prompt": {"main": [[{"node": "Build Generation Request", "type": "main", "index": 0}]]},
+    "Build Generation Request": {"main": [[{"node": "Gemini Generate Answer", "type": "main", "index": 0}]]},
+    "Gemini Generate Answer": {"main": [[{"node": "Extract Answer", "type": "main", "index": 0}], [{"node": "Send Fallback Reply", "type": "main", "index": 0}]]},
+    "Extract Answer": {"main": [[{"node": "Send WhatsApp Reply", "type": "main", "index": 0}]]},
+    "Send WhatsApp Reply": {"main": [[{"node": "Hash Session", "type": "main", "index": 0}]]},
+    "Hash Session": {"main": [[{"node": "Build Tourist Query Row", "type": "main", "index": 0}]]},
+    "Build Tourist Query Row": {"main": [[{"node": "Log Tourist Query", "type": "main", "index": 0}]]},
+    "Log Tourist Query": {"main": [[{"node": "Build Event Row", "type": "main", "index": 0}]]},
+    "Build Event Row": {"main": [[{"node": "Log Query Event", "type": "main", "index": 0}]]},
+    "Send Fallback Reply": {"main": [[{"node": "Build Error Event", "type": "main", "index": 0}]]},
+    "Build Error Event": {"main": [[{"node": "Log Error Event", "type": "main", "index": 0}]]},
+    "Send Text-Only Reply": {"main": [[{"node": "Build Unsupported Event", "type": "main", "index": 0}]]},
+    "Build Unsupported Event": {"main": [[{"node": "Log Unsupported Event", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
 }

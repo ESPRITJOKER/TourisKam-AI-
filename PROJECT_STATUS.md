@@ -83,6 +83,26 @@ semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case
   Campo Ma'an / Korup / Lobéké.
 - Found: several MINTOUL URLs cited in `touriscam_dataset_final/sources.csv` are 404.
 
+## Completed (demo hardening + Tariff Guard, 2026-09-15) — workflow v`9790e47e`
+- ✅ Readiness check found: 0 executions ever (never live-tested), replies could exceed
+  Twilio's 1,600-char limit, no safety advisory on high-risk areas, voice notes hit the
+  error reply, **and a production bug: Hash Session used `$env`, which n8n Cloud blocks
+  → every message would fail after replying, so nothing was ever logged.**
+- ✅ Prompt v2 (`rag/prompt.py` = `n8n/SYSTEM_PROMPT.txt` = n8n node): WhatsApp
+  formatting, ~900-char target, advisory rule, prefer `Tariff:` rows.
+- ✅ n8n "Build Retrieval Query": unions UK FCDO "Regional risks" chunks when a high-risk
+  area is named, and ≤3 `tariffs` rows on pricing intent (keywords sanitized to
+  `[a-z0-9-]`). "Format Context" de-dups; "Extract Answer" converts `**bold**`, caps at
+  1,500 chars, logs `tool_used=tariff_guard`. Generation 5 tries/5 s; reply 3 tries.
+  New "Has Text?" branch → text-only reply + `unsupported_media` event. Salt now inline
+  (redacted in repo backup).
+- ✅ Tariff Guard data: `db/tariffs_v2.sql` + `rag/load_tariffs.py` → **45 real rows**
+  (5 MINTOUL transport fares incl. airport day 3,500 / night 5,000 FCFA; 40 staging
+  prices with confidence) — placeholders removed.
+- ✅ Verified: SQL run live (airport-night taxi → tariff row; Lac Nyos → FCDO advisory;
+  Musée Maritime → 3,500 FCFA); `test_workflow` runs 1–3 (text path end-to-end incl.
+  logging, voice-note branch). Published.
+
 ## Completed (Day 3 — WhatsApp workflow)
 - ✅ n8n Cloud connected via n8n MCP (`thementalist.app.n8n.cloud`).
 - ✅ Built & validated the `TourisCam WhatsApp` workflow (19 nodes, id
@@ -100,8 +120,30 @@ semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case
   test script).
 
 ## Demo Readiness
-- **~55%.** RAG core + WhatsApp orchestration built. Needs live credential wiring
-  for the phone test; then Phase 2 voice, specialized tools (Day 4), dashboard (Day 5).
+- **~85%.** P0 spine complete and verified end-to-end except on a real phone:
+  RAG (1,451 chunks) · hardened WhatsApp workflow (published, safety advisories,
+  WhatsApp-safe replies, analytics logging fixed) · Tariff Guard (45 sourced rows) ·
+  MINTOUL dashboard (runs locally, numbers verified against SQL).
+- **Remaining:** user wires the Twilio Sandbox webhook + runs the 10-message phone
+  test (`n8n/README.md`); voice notes stay Phase 2 (bot replies "please type your
+  question"); guides/emergency tables still placeholders.
+
+## Completed (MINTOUL dashboard, 2026-09-16)
+- ✅ `dashboard/app.py` (Streamlit) + `requirements.txt` + `README.md`. Two tabs:
+  **Demo (simulated)** over `demo_query_logs` (banner on every view) and **Live bot**
+  over `query_events` (empty state until the phone test).
+- ✅ Views: 6 KPI tiles · region × week heatmap (one-hue sequential) · top-10 sites
+  (single colour, value at tip) · diverging sentiment by query type (blue↔red,
+  neutral grey, negative % direct-labelled) · language split (3 validated slots,
+  direct labels) · latest SOS table. One filter row (date/region/visitor type)
+  scopes everything; every chart has a table view; palette is theme-aware and was
+  checked with the dataviz validator in light and dark mode.
+- ✅ Verified headlessly (`streamlit.testing` AppTest): 0 exceptions; KPIs match SQL
+  (6,200 rows, 36.9% foreign, 97.1% resolved, 27.6% voice, 3.20 s, 126 SOS, 578
+  negative, fr 3,214 / en 2,263 / pidgin 723). Run:
+  `rag/.venv/Scripts/python.exe -m streamlit run dashboard/app.py` → localhost:8501.
+- ⚠ `DASHBOARD_PASSWORD` is not set in `.env` — the app warns and stays open; set it
+  before sharing the URL. Hosting stays local (it uses the DB password).
 
 ## Completed (Day 3 — go-live wiring, 2026-09-13)
 - ✅ 3 n8n credentials created (Header Auth `x-goog-api-key`, Postgres pooler,
@@ -129,10 +171,11 @@ semantic retrieval + guardrailed multilingual answers validated (EN/FR/miss-case
 - Day 4: specialized tool tables from the dataset CSVs; Day 5: dashboard.
 
 ## Known Bugs
-- None yet.
+- Fixed 2026-09-15: Hash Session `$env` access denied on n8n Cloud (logging never ran).
+- "Gorillas" query ranks the generic MINTOUL "Visiter" page above specific parks.
 
 ## Technical Debt
-- Seed tariffs/guides/emergency rows are **placeholders marked `unverified`** and MUST be replaced with real surveyed/official data before the demo.
+- Seed **guides/emergency** rows are still **placeholders marked `unverified`** (tariffs replaced 2026-09-15 with 45 sourced rows). Not used by the bot today; replace before any emergency tool is added.
 - RLS policies not yet defined (`db/policies.sql` planned) — anon key must not be exposed publicly until then.
 
 ## Deployment Status

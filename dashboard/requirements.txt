@@ -1,0 +1,7 @@
+# TourisCam AI — MINTOUL dashboard (Streamlit)
+# Install into the project venv: rag/.venv/Scripts/python.exe -m pip install -r dashboard/requirements.txt
+streamlit>=1.38          # dashboard UI
+pandas>=2.2              # aggregation
+plotly>=5.24             # charts (bar cornerradius needs >= 5.19)
+psycopg2-binary>=2.9.9   # Supabase Postgres (shared with rag/)
+python-dotenv>=1.0.1     # project .env, via rag/config.py

@@ -6,6 +6,7 @@ single source of truth and copy it into the n8n LLM node.
 """
 from __future__ import annotations
 
+import re
 from typing import List
 
 from config import GEMINI_MODEL, gemini_client
@@ -36,8 +37,15 @@ estimated) when it matters to the user.
 TARIFF RULES
 - Never invent a price. Only state a price that appears in the provided \
 context, and label it clearly (verified, benchmark, or estimated).
+- Prefer entries that start with "Tariff:" (price tables) over prices mentioned \
+in other sources, and say prices are indicative.
 - If no price is available, say the price is unavailable and, if useful, give \
 general guidance (e.g. "agree the fare before you start the trip").
+
+SAFETY ADVISORIES
+- If the context contains an official travel advisory (e.g. UK FCDO travel \
+advice) for the place the user asks about, mention it briefly at the start of \
+your reply and name its source. Do not exaggerate, soften or invent risk levels.
 
 EMERGENCY RULES
 - You may share verified emergency contact information from the context.
@@ -45,8 +53,10 @@ EMERGENCY RULES
 you cannot dispatch anyone.
 
 STYLE
-- Be concise and friendly. WhatsApp-length answers. Use short paragraphs or a \
-few bullet points. No markdown headers.
+- Be concise and friendly. Keep replies under 900 characters. Use short \
+paragraphs or a few "-" bullet points.
+- WhatsApp formatting only: *bold* with single asterisks, _italic_ with \
+underscores. Never use ** or # headings.
 - Focus on Cameroon tourism: destinations, attractions, opening hours, \
 benchmark prices, verified guides, emergency info. Politely redirect \
 off-topic requests back to Cameroon tourism.
@@ -56,6 +66,20 @@ FALLBACK_MESSAGE = (
     "I'm having trouble accessing that information right now. "
     "Please try again shortly."
 )
+
+# Twilio rejects WhatsApp bodies over 1,600 characters; keep a safety margin.
+WHATSAPP_MAX_CHARS = 1500
+
+
+def format_for_whatsapp(text: str, limit: int = WHATSAPP_MAX_CHARS) -> str:
+    """WhatsApp markdown + length cap. Mirrors the n8n "Extract Answer" node."""
+    text = re.sub(r"\*\*(.+?)\*\*", r"*\1*", text, flags=re.S)
+    text = re.sub(r"(?m)^[ \t]{0,3}#{1,6}[ \t]*", "", text).strip()
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    end = max(cut.rfind(". "), cut.rfind("! "), cut.rfind("? "), cut.rfind("\n"))
+    return (cut[:end + 1] if end > limit // 2 else cut).rstrip() + " …"
 
 
 def build_user_prompt(query: str, context_block: str) -> str:
@@ -95,7 +119,7 @@ def answer_query(query: str, matches: List[dict], *, retries: int = 3) -> str:
             )
             text = (resp.text or "").strip()
             if text:
-                return text
+                return format_for_whatsapp(text)
         except Exception as e:  # noqa: BLE001
             msg = str(e)
             transient = any(code in msg for code in ("429", "500", "503", "UNAVAILABLE"))
